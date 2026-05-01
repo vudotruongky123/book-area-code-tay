@@ -9,6 +9,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// Cấu hình bảo mật CORS cho ứng dụng
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
+
 import com.thientri.book_area.security.JwtAuthenticationFilter;
 
 @Configuration
@@ -30,6 +36,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(crsf -> crsf.disable()) // Tắt CSRF vì REST API không dùng session cookie
                 .authorizeHttpRequests(auth -> auth
 
@@ -38,11 +45,14 @@ public class SecurityConfig {
                                 "/api/auth/refresh")
                         .permitAll() // Cho phép ngay cả khi chưa đăng nhập
 
+                        .requestMatchers(HttpMethod.GET, "/api/books")
+                        .permitAll() // Cho phép ngay cả khi chưa đăng nhập
+
                         .requestMatchers(HttpMethod.GET,
                                 "/api/audiobooks",
                                 "/api/audio-chapters",
                                 "/api/authors",
-                                "/api/books",
+                                // "/api/books",
                                 "/api/book-images",
                                 "/api/categories",
                                 "/api/inventory-logs",
@@ -55,6 +65,24 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // Thay 5173 bằng cổng mà Vite đang chạy trên trình duyệt
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+
+        // Cho phép các phương thức giao tiếp
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // Cho phép gửi kèm các header quan trọng (như token đăng nhập sau này)
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 
     // Giấy thông hành (JWT) - Bắt đầu với việc Đăng nhập

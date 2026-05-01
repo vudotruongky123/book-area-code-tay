@@ -75,8 +75,8 @@ public class User implements UserDetails {
 
     // Helper method để thiết lập quan hệ hai chiều dễ dàng hơn
     public void setCart(Cart cart) {
-        if (cart == null) {
-            if (this.cart != null) {
+        if (cart == null) { // Nếu xóa giỏ hàng, cần đảm bảo ràng buộc hai chiều được duy trì
+            if (this.cart != null) {    
                 this.cart.setUser(null);
             }
         } else {
@@ -93,7 +93,7 @@ public class User implements UserDetails {
         }
     }
 
-    // Ghi đè các phương thức đã implements
+    // Lấy ra tất cả quyền của người dùng đang có (Ghi đè các phương thức đã implements)
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
@@ -105,7 +105,6 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        // TODO: Trả về thông tin định danh (chỉ thông tin duy nhất)
         return getEmail();
     }
 

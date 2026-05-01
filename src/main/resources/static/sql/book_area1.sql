@@ -287,7 +287,7 @@ CREATE TABLE inventory_logs(
 );
 
 
--- Tạo bảng lưu Refresh Token
+-- Tạo bảng lưu Refresh Token (Có tác dụng lưu một chuỗi được tạo ra khi người dùng đăng nhập thành công, và có thời hạn sử dụng lâu hơn Access Token, thường là 7 ngày. Khi Access Token hết hạn, client có thể gửi Refresh Token này lên server để yêu cầu cấp mới Access Token mà không cần phải đăng nhập lại.)
 CREATE TABLE refresh_tokens(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     expiry_date DATETIME,

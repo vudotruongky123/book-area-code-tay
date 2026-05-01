@@ -34,7 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // Kiểm tra request có JWT và Header có bắt đầu bằng "Bearer " hay không
         final String authHeader = request.getHeader("Authorization");
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response); // Kiểm tra thấy không có JWT trả lại request cho đi tiếp
             return; // Ngưng kiểm tra

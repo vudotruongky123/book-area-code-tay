@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.thientri.book_area.dto.request.order.CartItemRequest;
 import com.thientri.book_area.model.catalog.Book;
 import com.thientri.book_area.model.order.Cart;
+import com.thientri.book_area.model.order.CartItem;
 import com.thientri.book_area.model.user.User;
 import com.thientri.book_area.repository.catalog.BookRepository;
 import com.thientri.book_area.repository.order.CartRepository;
@@ -41,7 +42,31 @@ public class CartService {
                 .orElseThrow(() -> new RuntimeException("Sách không tồn tại!"));
 
         // 4. KIỂM TRA SÁCH ĐÃ CÓ TRONG GIỎ HAY CHƯA
-        
+        boolean isFound = false;
+        for (CartItem cartItem : cart.getCartItems()) {
+            if (cartItem.getBook().getId().equals(book.getId())) {
+                isFound = true; // Tìm thấy sách đã tồn tại trong giỏ hàng
+                if (cartItem.getQuantity() + request.getQuantity() <= book.getStock()) {
+                    cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
+                } else {
+                    throw new RuntimeException("Sách đã hết hàng, quý khách vui lòng chờ nhập kho!");
+                }
+                break;
+            }
+        }
+
+        if (!isFound) {
+            if (book.getStock() - request.getQuantity() >= 0) {
+                CartItem newCartItem = CartItem.builder()
+                        .cart(cart)
+                        .book(book)
+                        .quantity(request.getQuantity())
+                        .build();
+                cart.getCartItems().add(newCartItem);
+            } else {
+                throw new RuntimeException("Sách đã hết hàng, quý khách vui lòng chờ nhập kho!");
+            }
+        }
 
         // 5. Lưu lại giỏ hàng
         cartRepository.save(cart);

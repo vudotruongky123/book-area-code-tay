@@ -35,6 +35,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(loginRequest)); // Trả về chuỗi Token được bao bọc dữ liệu
     }
 
+    // Làm mới token khi token cũ hết hạn, nhưng refreshToken vẫn còn hạn (7 ngày) => trả về token mới
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody TokenRefreshRequest request) {
         String requestRefreshToken = request.getRefreshToken();
