@@ -72,6 +72,15 @@ CREATE TABLE books(
     FOREIGN KEY (publisher_id) REFERENCES publishers(id)
 );
 
+-- Thêm trường dữ liệu để có thể lưu file và đường dẫn sách
+ALTER TABLE books
+ADD COLUMN file_name VARCHAR(255) UNIQUE AFTER title,
+ADD COLUMN page_number INT AFTER file_name;
+
+ALTER TABLE books
+DROP COLUMN file_name,
+DROP COLUMN page_number;
+
 -- Ảnh sách
 CREATE TABLE book_images(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -337,69 +346,10 @@ CREATE INDEX idx_reviews_book_id ON reviews(book_id);
 
 
 
--- Dữ liệu mẫu 1
--- 1. Thêm Phân quyền
--- CẬP NHẬT SAU NÀY || Trong Spring Security, người ta thường có quy ước đặt tên quyền bắt đầu bằng chữ ROLE_ (ví dụ: ROLE_USER, ROLE_ADMIN). Mặc dù lưu là USER vẫn hoạt động, nhưng dùng ROLE_USER sẽ giúp cấu hình ở Bước 3 dễ thở hơn rất nhiều.
-INSERT INTO roles (name) VALUES 
-('ADMIN'), 
-('CUSTOMER');
-
--- 2. Thêm Người dùng (Lưu ý: Trong thực tế Spring Boot, mật khẩu sẽ được băm (hash), ở đây ta để tạm chữ thường)
-INSERT INTO users (email, password, full_name, phone) VALUES
-('admin@bookarea.com', '123456', 'Nguyễn Quản Trị', '0901234567'),
-('khachhang@gmail.com', '123456', 'Trần Khách Hàng', '0987654321');
-
--- 3. Cấp quyền cho người dùng (user_id = 1 làm ADMIN, user_id = 2 làm CUSTOMER)
-INSERT INTO user_roles (user_id, role_id) VALUES 
-(1, 1), 
-(2, 2);
-
--- 4. Thêm Nhà xuất bản
-INSERT INTO publishers (name, description) VALUES
-('NXB Trẻ', 'Nhà xuất bản dành cho giới trẻ'),
-('Nhã Nam', 'Bởi vì sách là thế giới');
-
--- 5. Thêm Tác giả & Danh mục
-INSERT INTO authors (name) VALUES 
-('J.K. Rowling'), 
-('Nguyễn Nhật Ánh');
-
-INSERT INTO categories (name) VALUES 
-('Tiểu thuyết viễn tưởng'), 
-('Truyện dài');
-
--- 6. Thêm Sách (Lưu ý: Cột ID sẽ tự động tăng là 1, 2, 3)
-INSERT INTO books (title, description, price, stock, publisher_id) VALUES
-('Harry Potter và Hòn đá Phù thủy', 'Tập 1 của series', 150000.00, 50, 1),
-('Mắt Biếc', 'Truyện tình buồn của Ngạn và Hà Lan', 95000.00, 100, 1),
-('Cây Chuối Non Đi Giày Xanh', 'Ký ức tuổi thơ', 110000.00, 30, 2);
-
--- 7. Liên kết Sách với Tác giả và Danh mục (Bảng trung gian N-N)
-INSERT INTO book_authors (book_id, author_id) VALUES 
-(1, 1), -- Harry Potter (1) - J.K. Rowling (1)
-(2, 2), -- Mắt Biếc (2) - Nguyễn Nhật Ánh (2)
-(3, 2); -- Cây Chuối Non (3) - Nguyễn Nhật Ánh (2)
-
-INSERT INTO book_categories (book_id, category_id) VALUES 
-(1, 1), 
-(2, 2), 
-(3, 2);
-
--- 8. Thêm Trạng thái đơn hàng
-INSERT INTO order_status (name) VALUES 
-('PENDING'), 
-('SHIPPING'), 
-('COMPLETED'), 
-('CANCELLED');
 
 
 
-
-
-
-
-
-
+-- ============================ Đang sử dung ==================================
 -- Dữ liẹu mẫu 2
 INSERT INTO users (email, password, full_name, phone) VALUES
 ('user1@gmail.com','123','User 1','0900000001'),
@@ -611,7 +561,7 @@ INSERT INTO inventory_logs (book_id, change_amount, reason) VALUES
 
 
 
-
+-- ================================= Truy vấn thử ===================================
 -- SELECT Truy vấn dữ liệu
 SELECT * FROM books;
 SELECT * FROM books b WHERE b.price > 100;
@@ -645,4 +595,60 @@ ORDER BY total_spent DESC;
 
 
 
+-- ================================ Không sử dụng =================================
 
+
+-- Dữ liệu mẫu 1
+-- 1. Thêm Phân quyền
+-- CẬP NHẬT SAU NÀY || Trong Spring Security, người ta thường có quy ước đặt tên quyền bắt đầu bằng chữ ROLE_ (ví dụ: ROLE_USER, ROLE_ADMIN). Mặc dù lưu là USER vẫn hoạt động, nhưng dùng ROLE_USER sẽ giúp cấu hình ở Bước 3 dễ thở hơn rất nhiều.
+INSERT INTO roles (name) VALUES 
+('ADMIN'), 
+('CUSTOMER');
+
+-- 2. Thêm Người dùng (Lưu ý: Trong thực tế Spring Boot, mật khẩu sẽ được băm (hash), ở đây ta để tạm chữ thường)
+INSERT INTO users (email, password, full_name, phone) VALUES
+('admin@bookarea.com', '123456', 'Nguyễn Quản Trị', '0901234567'),
+('khachhang@gmail.com', '123456', 'Trần Khách Hàng', '0987654321');
+
+-- 3. Cấp quyền cho người dùng (user_id = 1 làm ADMIN, user_id = 2 làm CUSTOMER)
+INSERT INTO user_roles (user_id, role_id) VALUES 
+(1, 1), 
+(2, 2);
+
+-- 4. Thêm Nhà xuất bản
+INSERT INTO publishers (name, description) VALUES
+('NXB Trẻ', 'Nhà xuất bản dành cho giới trẻ'),
+('Nhã Nam', 'Bởi vì sách là thế giới');
+
+-- 5. Thêm Tác giả & Danh mục
+INSERT INTO authors (name) VALUES 
+('J.K. Rowling'), 
+('Nguyễn Nhật Ánh');
+
+INSERT INTO categories (name) VALUES 
+('Tiểu thuyết viễn tưởng'), 
+('Truyện dài');
+
+-- 6. Thêm Sách (Lưu ý: Cột ID sẽ tự động tăng là 1, 2, 3)
+INSERT INTO books (title, description, price, stock, publisher_id) VALUES
+('Harry Potter và Hòn đá Phù thủy', 'Tập 1 của series', 150000.00, 50, 1),
+('Mắt Biếc', 'Truyện tình buồn của Ngạn và Hà Lan', 95000.00, 100, 1),
+('Cây Chuối Non Đi Giày Xanh', 'Ký ức tuổi thơ', 110000.00, 30, 2);
+
+-- 7. Liên kết Sách với Tác giả và Danh mục (Bảng trung gian N-N)
+INSERT INTO book_authors (book_id, author_id) VALUES 
+(1, 1), -- Harry Potter (1) - J.K. Rowling (1)
+(2, 2), -- Mắt Biếc (2) - Nguyễn Nhật Ánh (2)
+(3, 2); -- Cây Chuối Non (3) - Nguyễn Nhật Ánh (2)
+
+INSERT INTO book_categories (book_id, category_id) VALUES 
+(1, 1), 
+(2, 2), 
+(3, 2);
+
+-- 8. Thêm Trạng thái đơn hàng
+INSERT INTO order_status (name) VALUES 
+('PENDING'), 
+('SHIPPING'), 
+('COMPLETED'), 
+('CANCELLED');

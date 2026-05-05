@@ -101,6 +101,13 @@
 			<version>0.11.5</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<!-- MinIO -->
+		<dependency>
+			<groupId>io.minio</groupId>
+			<artifactId>minio</artifactId>
+			<version>8.5.7</version> <!-- Bạn có thể kiểm tra version mới nhất trên Maven Repository -->
+		</dependency>
 	</dependencies>
 
 	<build>

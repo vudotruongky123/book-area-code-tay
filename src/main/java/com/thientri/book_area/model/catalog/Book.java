@@ -41,6 +41,12 @@ public class Book {
     @Column(name = "title", length = 255, nullable = false)
     private String title;
 
+    @Column(name = "file_name", length = 255, unique = true)
+    private String fileName;
+
+    @Column(name = "page_number")
+    private Integer pageNumber;
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

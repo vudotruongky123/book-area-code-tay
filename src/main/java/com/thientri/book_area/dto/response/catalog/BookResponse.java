@@ -16,6 +16,9 @@ import lombok.Setter;
 public class BookResponse {
     private Long id;
     private String title;
+    private String fileName;
+    private String bookUrl;
+    private Integer pageNumber;
     private BigDecimal price;
     private Integer stock;
     private String publisherName;
