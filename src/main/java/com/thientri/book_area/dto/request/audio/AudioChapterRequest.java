@@ -1,7 +1,8 @@
 package com.thientri.book_area.dto.request.audio;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,10 +11,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+// Bỏ thuộc tính duration đi
 public class AudioChapterRequest {
     private Long audiobookId;
     private String title;
-    private String audioUrl;
-    private Integer duration;
+    private MultipartFile fileAudio;
 }

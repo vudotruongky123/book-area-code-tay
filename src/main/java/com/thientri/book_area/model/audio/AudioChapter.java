@@ -33,8 +33,8 @@ public class AudioChapter {
     @Column(name = "title", length = 255)
     private String title;
 
-    @Column(name = "audio_url", columnDefinition = "TEXT")
-    private String audioUrl;
+    @Column(name = "audio_file_name", columnDefinition = "TEXT")
+    private String audioFileName;
 
     @Column(name = "duration")
     private Integer duration;

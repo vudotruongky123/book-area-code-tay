@@ -41,7 +41,7 @@ public class BookService {
         String url = null;
         if (book.getFileName() != null) {
             try {
-                url = minioService.getBookUrl(book.getFileName());
+                url = minioService.getUrl(book.getFileName());
             } catch (Exception e) {
                 e.printStackTrace();
             }

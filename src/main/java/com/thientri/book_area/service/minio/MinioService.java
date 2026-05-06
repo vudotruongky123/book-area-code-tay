@@ -47,7 +47,7 @@ public class MinioService {
     }
 
     // Hàm lấy link xem/tải file có thời hạn
-    public String getBookUrl(String fileName) throws Exception {
+    public String getUrl(String fileName) throws Exception {
         return minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)

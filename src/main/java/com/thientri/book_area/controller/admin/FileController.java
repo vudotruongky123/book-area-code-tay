@@ -33,7 +33,7 @@ public class FileController {
     @GetMapping("/download")
     public ResponseEntity<String> getBookUrl(@RequestParam("objectName") String fileName) {
         try {
-            String url = minioService.getBookUrl(fileName);
+            String url = minioService.getUrl(fileName);
             return ResponseEntity.ok(url);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi lấy link: " + e.getMessage());

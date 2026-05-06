@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,14 +30,14 @@ public class AudioChapterController {
         return audioChapterService.getAllAudioChapters();
     }
 
-    @PostMapping
-    public AudioChapterResponse addNewAudioChapter(@RequestBody AudioChapterRequest audioChapterRequest) {
+    @PostMapping(consumes = "multipart/form-data") // Nhận cả FILE và dữ liệu JSON
+    public AudioChapterResponse addNewAudioChapter(@ModelAttribute AudioChapterRequest audioChapterRequest) {
         return audioChapterService.createAudioChapter(audioChapterRequest);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = "multipart/form-data")
     public AudioChapterResponse updateAudioChapter(@PathVariable Long id,
-            @RequestBody AudioChapterRequest audioChapterRequest) {
+            @ModelAttribute AudioChapterRequest audioChapterRequest) {
         return audioChapterService.updateAudioChapter(id, audioChapterRequest);
     }
 

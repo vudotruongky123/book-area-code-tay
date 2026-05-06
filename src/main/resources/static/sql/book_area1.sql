@@ -131,6 +131,10 @@ CREATE TABLE audio_chapters(
     FOREIGN KEY (audiobook_id) REFERENCES audiobooks(id) ON DELETE CASCADE
 );
 
+-- Đổi tên trường dữ liệu để lấy file âm thanh của MinIO
+ALTER TABLE audio_chapters
+RENAME COLUMN audio_url TO audio_file_name;
+
 -- Người đọc
 CREATE TABLE narrators(
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
