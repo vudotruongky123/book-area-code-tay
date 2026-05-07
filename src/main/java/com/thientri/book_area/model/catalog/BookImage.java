@@ -30,6 +30,6 @@ public class BookImage {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
+    @Column(name = "image_file_name", columnDefinition = "TEXT")
+    private String imageFileName;
 }

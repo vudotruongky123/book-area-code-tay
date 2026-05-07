@@ -89,6 +89,10 @@ CREATE TABLE book_images(
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
 
+-- Đổi tên cột để lấy ảnh trên MinIO
+ALTER TABLE book_images
+RENAME COLUMN image_url TO image_file_name;
+
 -- Bảng liên kết giữa (books & authors) n-n
 CREATE TABLE book_authors(
     book_id BIGINT,

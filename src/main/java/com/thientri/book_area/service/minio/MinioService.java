@@ -24,6 +24,9 @@ public class MinioService {
     @Value("${minio.bucket.name}")
     private String bucketName;
 
+    @Value("/${minio.endpoint}")
+    private String minioEndpoint;
+
     public String uploadFile(MultipartFile file) throws Exception {
         // 1. Đổi tên file có tên không trùng nhau
         String originalFilename = file.getOriginalFilename();
@@ -63,5 +66,10 @@ public class MinioService {
                 .bucket(bucketName)
                 .object(fileName)
                 .build());
+    }
+
+    // Link ảnh của sách
+    public String getPublicImageUrl(String fileName) {
+        return minioEndpoint + "/" + bucketName + "/" + fileName;
     }
 }
