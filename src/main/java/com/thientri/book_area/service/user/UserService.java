@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +21,7 @@ import com.thientri.book_area.repository.user.RoleRepository;
 import com.thientri.book_area.repository.user.UserRepository;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -79,7 +82,7 @@ public class UserService {
         User updatedUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan nguoi dung de cap nhat!"));
         updatedUser.setEmail(userRequest.getEmail());
-        updatedUser.setPassword(userRequest.getPassword());
+        updatedUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         updatedUser.setFullName(userRequest.getFullName());
         userRepository.save(updatedUser);
         return mapToResponse(updatedUser);
@@ -90,5 +93,11 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Khong tim thay user de xoa!"));
         userRepository.deleteById(id);
         return mapToResponse(userDeleted);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Khong tim thay user voi email: " + username));
     }
 }

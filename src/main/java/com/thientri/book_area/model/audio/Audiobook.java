@@ -21,14 +21,13 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+
 
 @Entity
 @Table(name = "audiobooks")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -44,10 +43,13 @@ public class Audiobook {
     @Column(name = "total_duration")
     private Integer totalDuration;
 
+    
     @OneToMany(mappedBy = "audiobook", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<AudioChapter> chapters = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(name = "audiobook_narrators", joinColumns = @JoinColumn(name = "audiobook_id"), inverseJoinColumns = @JoinColumn(name = "narrator_id"))
+    @Builder.Default
     private Set<Narrator> narrators = new HashSet<>();
 }

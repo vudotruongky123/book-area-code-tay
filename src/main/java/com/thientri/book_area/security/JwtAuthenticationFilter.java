@@ -2,6 +2,9 @@ package com.thientri.book_area.security;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -19,6 +22,8 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtService jwtService;
     private final UserRepository userRepository;
 
@@ -27,39 +32,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
-    // Máy quét JWT các request gửi đến (Chot kiem tra an ninh)
+    // Máy quét JWT các request gửi đến
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            @NonNull HttpServletRequest request,
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain
+    ) throws ServletException, IOException {
 
         // Kiểm tra request có JWT và Header có bắt đầu bằng "Bearer " hay không
         final String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // Kiểm tra thấy không có JWT trả lại request cho đi tiếp
-            return; // Ngưng kiểm tra
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        final String jwt = authHeader.substring(7).trim(); // Lấy ra mã của Header bỏ phần "Bearer " đi
-        System.out.println("Chuỗi JWT nhận được: " + jwt); // <-- Thêm dòng này
-        final String userEmail = jwtService.extractEmail(jwt).trim(); // Kiểm tra & chuyển phần Header của JWT email
-        System.out.println("Email giải mã được: " + userEmail); // <-- Thêm dòng này
+        final String jwt = authHeader.substring(7).trim();
+        log.debug("Chuỗi JWT nhận được: {}", jwt);
+
+        final String userEmail = jwtService.extractEmail(jwt).trim();
+        log.debug("Email giải mã được: {}", userEmail);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            System.out.println("Bắt đầu xác thực cho: " + userEmail);
+            log.debug("Bắt đầu xác thực cho: {}", userEmail);
+
             User userAuth = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("Khong tim thay user voi email duoc xac thuc!"));
 
-            // 1. Tạo xác thực cho user nếu đăng nhập đúng token
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userAuth, null, userAuth.getAuthorities());
+            UsernamePasswordAuthenticationToken authToken =
+                    new UsernamePasswordAuthenticationToken(userAuth, null, userAuth.getAuthorities());
 
-            // 2. Thêm thông tin phụ (VD: Địa chỉ IP của khách) vào thẻ
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            
-            // 3. Lưu xác thực người dùng vào hệ thống (Hoàn tất đăng nhập cho request này)
+
             SecurityContextHolder.getContext().setAuthentication(authToken);
         }
 
-        filterChain.doFilter(request, response); // Kiểm tra thấy không có JWT trả lại request cho đi tiếp
-
+        filterChain.doFilter(request, response);
     }
 }

@@ -5,16 +5,16 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class AudiobookRequest {
     private Long bookId;
+    @Builder.Default
     private List<Long> narratorIds = new ArrayList<>();
 }

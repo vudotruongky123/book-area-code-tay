@@ -1,5 +1,8 @@
 package com.thientri.book_area.config;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,12 +11,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-// Cấu hình bảo mật CORS cho ứng dụng
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import java.util.List;
 
 import com.thientri.book_area.security.JwtAuthenticationFilter;
 
@@ -21,47 +21,80 @@ import com.thientri.book_area.security.JwtAuthenticationFilter;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final List<String> allowedOriginPatterns;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter) {
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthFilter,
+            @Value("${app.cors.allowed-origin-patterns}") List<String> allowedOriginPatterns) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.allowedOriginPatterns = allowedOriginPatterns;
     }
 
-    // Ổ khóa (Mã hóa mật khẩu)
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Được sử dụng để mã hóa mật khẩu
+        return new BCryptPasswordEncoder();
     }
 
-    // Người gác cổng (SecurityFilterChain)
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(crsf -> crsf.disable()) // Tắt CSRF vì REST API không dùng session cookie
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-
-                        .requestMatchers(HttpMethod.POST, "/api/users",
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/",
+                                "/css/**",
+                                "/js/**",
+                                "/images/**",
+                                "/favicon.ico")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/users",
                                 "/api/auth/login",
                                 "/api/auth/refresh")
-                        .permitAll() // Cho phép ngay cả khi chưa đăng nhập
-
-                        .requestMatchers(HttpMethod.GET, "/api/books")
-                        .permitAll() // Cho phép ngay cả khi chưa đăng nhập
-
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/books").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/audiobooks",
                                 "/api/audio-chapters",
                                 "/api/authors",
-                                // "/api/books",
                                 "/api/book-images",
                                 "/api/categories",
                                 "/api/inventory-logs",
                                 "/api/users")
                         .hasAuthority("ADMIN")
-
-                        .anyRequest().authenticated()) // Phải đăng nhập mới được thao tác
-
-                // Lệnh chốt hạ: Đặt máy quét thẻ lên trước cửa xác thực mặc định
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/books",
+                                "/api/audiobooks",
+                                "/api/audio-chapters",
+                                "/api/authors",
+                                "/api/book-images",
+                                "/api/categories",
+                                "/api/inventory-logs")
+                        .hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/books/**",
+                                "/api/audiobooks/**",
+                                "/api/audio-chapters/**",
+                                "/api/authors/**",
+                                "/api/book-images/**",
+                                "/api/categories/**",
+                                "/api/inventory-logs/**",
+                                "/api/users/**")
+                        .hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/books/**",
+                                "/api/audiobooks/**",
+                                "/api/audio-chapters/**",
+                                "/api/authors/**",
+                                "/api/book-images/**",
+                                "/api/categories/**",
+                                "/api/inventory-logs/**",
+                                "/api/users/**")
+                        .hasAuthority("ADMIN")
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -70,20 +103,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-
-        // Thay 5173 bằng cổng mà Vite đang chạy trên trình duyệt
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-
-        // Cho phép các phương thức giao tiếp
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-
-        // Cho phép gửi kèm các header quan trọng (như token đăng nhập sau này)
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
+        configuration.setAllowedOriginPatterns(allowedOriginPatterns);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "Origin",
+                "X-Requested-With"));
+        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
-
-    // Giấy thông hành (JWT) - Bắt đầu với việc Đăng nhập
 }

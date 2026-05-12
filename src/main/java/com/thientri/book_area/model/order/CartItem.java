@@ -37,5 +37,6 @@ public class CartItem {
     private Book book;
 
     @Column(name = "quantity", nullable = false)
+    @Builder.Default
     private Integer quantity = 1;
 }

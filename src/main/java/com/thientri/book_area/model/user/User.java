@@ -3,6 +3,7 @@ package com.thientri.book_area.model.user;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,18 +29,19 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class User implements UserDetails {
+
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -60,20 +62,26 @@ public class User implements UserDetails {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Builder.Default
     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles;
+    @JoinTable(
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
     private List<Address> addresses = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "user")
     private List<RefreshToken> refreshTokens = new ArrayList<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Cart cart;
 
-    // Helper method để thiết lập quan hệ hai chiều dễ dàng hơn
     public void setCart(Cart cart) {
         if (cart == null) { // Nếu xóa giỏ hàng, cần đảm bảo ràng buộc hai chiều được duy trì
             if (this.cart != null) {    
@@ -85,22 +93,19 @@ public class User implements UserDetails {
         this.cart = cart;
     }
 
-    // Hàm tiện ích để khởi tạo giỏ hàng trống
     public void initCart() {
         if (this.cart == null) {
-            this.cart = new Cart();
-            this.cart.setUser(this); // Ràng buộc giỏ hàng thuộc về User này
+            Cart newCart = new Cart();
+            setCart(newCart);
         }
     }
 
     // Lấy ra tất cả quyền của người dùng đang có (Ghi đè các phương thức đã implements)
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-        for (Role role : this.roles) { // Chuyển đổi Role sang quyền của Spring
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
-        }
-        return authorities;
+        return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .toList();
     }
 
     @Override

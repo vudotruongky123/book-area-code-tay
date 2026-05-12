@@ -7,6 +7,8 @@ const navItems = [
   { label: 'Membership', href: '#membership' },
 ]
 
+const utilityLinks = [{ label: 'Admin Desk', to: '/admin' }]
+
 const heroFacts = [
   { value: '10,000+', label: 'BOOKS' },
   { value: 'Offline', label: 'READING' },
@@ -165,7 +167,11 @@ const membershipBenefits = [
         <a v-for="item in navItems" :key="item.label" :href="item.href">{{ item.label }}</a>
       </nav>
 
-      <div class="topbar-side topbar-side-right" aria-hidden="true"></div>
+      <div class="topbar-side topbar-side-right">
+        <RouterLink v-for="item in utilityLinks" :key="item.label" class="topbar-utility" :to="item.to">
+          {{ item.label }}
+        </RouterLink>
+      </div>
     </header>
 
     <main class="homepage">

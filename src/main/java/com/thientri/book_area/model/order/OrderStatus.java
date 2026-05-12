@@ -14,6 +14,6 @@ public class OrderStatus {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", length = 50, nullable = false, unique = true)
     private String name;
 }

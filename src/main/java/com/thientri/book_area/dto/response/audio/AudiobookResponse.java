@@ -5,12 +5,11 @@ import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -18,5 +17,7 @@ public class AudiobookResponse {
     private Long id;
     private Long bookId;
     private Integer totalDuration;
+
+    @Builder.Default
     private Set<String> narratorNames = new HashSet<>();
 }

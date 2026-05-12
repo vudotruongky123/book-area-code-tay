@@ -21,6 +21,8 @@ public class UserResponse {
     private String email;
     private String fullName;
     private String phone;
+    @Builder.Default
     private Set<String> roles = new HashSet<>();
+    @Builder.Default
     private List<Long> addressIds = new ArrayList<>();
 }

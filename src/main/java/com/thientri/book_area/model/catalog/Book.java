@@ -66,12 +66,15 @@ public class Book {
 
     @ManyToMany
     @JoinTable(name = "book_authors", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "author_id"))
+    @Builder.Default
     private Set<Author> authors = new HashSet<>();
 
     @OneToMany(mappedBy = "book")
+    @Builder.Default
     private List<BookImage> images = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(name = "book_categories", joinColumns = @JoinColumn(name = "book_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
+    @Builder.Default
     private Set<Category> categories = new HashSet<>();
 }

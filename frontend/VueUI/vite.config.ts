@@ -17,7 +17,7 @@ export default defineConfig({
   },
   // Thêm đoạn cấu hình dưới đây để chạy với Cloudflare Tunnel
   server: {
-    host: '0.0.0.0', // Cho phép lắng nghe trên tất cả card mạng
-    allowedHosts: true // Cho phép mọi host truy cập (bao gồm link của Cloudflare)
+    host: '0.0.0.0',
+    allowedHosts: true
   }
 })
