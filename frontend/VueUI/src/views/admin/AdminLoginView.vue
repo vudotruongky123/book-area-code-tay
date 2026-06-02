@@ -102,6 +102,7 @@ async function handleSubmit() {
 </template>
 
 <style scoped>
+
 .admin-auth {
   --auth-bg: oklch(0.95 0.013 74);
   --auth-surface: oklch(0.985 0.006 74 / 0.9);
