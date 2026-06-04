@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -6,12 +6,11 @@ import DashboardBarChart from '../../components/admin/DashboardBarChart.vue'
 import { getDashboardSummary, getMonthlyStats } from '../../services/adminDashboard'
 import { ApiError } from '../../services/api'
 import { authUser, logout } from '../../stores/auth'
-import type { AdminDashboardSummary, AdminMonthlyStats } from '../../types/dashboard'
 
 const router = useRouter()
 
-const summary = ref<AdminDashboardSummary | null>(null)
-const monthlyStats = ref<AdminMonthlyStats[]>([])
+const summary = ref(null)
+const monthlyStats = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
 const monthlyStatsLoading = ref(true)
@@ -36,7 +35,7 @@ const summaryCards = computed(() => {
 async function handleAuthFailure() {
   logout()
   await router.replace({
-    name: 'admin-login',
+    name: 'login',
     query: {
       redirect: '/admin',
     },
@@ -86,7 +85,7 @@ async function loadDashboard() {
 
 function handleLogout() {
   logout()
-  router.replace('/admin/login')
+  router.replace('/login')
 }
 
 onMounted(loadDashboard)

@@ -5,11 +5,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.thientri.book_area.dto.request.user.UserRequest;
 import com.thientri.book_area.dto.response.user.UserResponse;
@@ -28,7 +30,9 @@ public class UserService implements UserDetailsService {
     private final AddressRepository addressRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository,
+    public UserService(
+            UserRepository userRepository,
+            RoleRepository roleRepository,
             AddressRepository addressRepository,
             PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
@@ -66,21 +70,44 @@ public class UserService implements UserDetailsService {
     }
 
     public UserResponse createUser(UserRequest userRequest) {
+        if (userRequest == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dữ liệu người dùng không hợp lệ.");
+        }
+
+        String email = normalize(userRequest.getEmail());
+        String fullName = normalize(userRequest.getFullName());
+        String rawPassword = userRequest.getPassword() == null ? "" : userRequest.getPassword();
+
+        if (email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email không được để trống.");
+        }
+
+        if (fullName.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Họ tên không được để trống.");
+        }
+
+        if (rawPassword.length() < 6) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mật khẩu phải có tối thiểu 6 ký tự.");
+        }
+
+        if (userRepository.findByEmail(email).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email này đã được sử dụng.");
+        }
+
         User newUser = new User();
         Set<Role> role = new HashSet<>();
-        role.add(roleRepository.findByName("USER") // Gán quyền mặc định cho User
-                .orElseThrow(() -> new RuntimeException("Khong tim thay quyen cua USER de tao tai khoan")));
-        newUser.setEmail(userRequest.getEmail());
-        newUser.setPassword(passwordEncoder.encode(userRequest.getPassword())); // mật khẩu đăng ký => mã hóa khi Save
-        newUser.setFullName(userRequest.getFullName());
+        role.add(resolveRole("USER"));
+        newUser.setEmail(email);
+        newUser.setPassword(passwordEncoder.encode(rawPassword));
+        newUser.setFullName(fullName);
         newUser.setRoles(role);
-        newUser.initCart(); // Thêm giỏ hàng mới khi tạo tài khoản
+        newUser.initCart();
         return mapToResponse(userRepository.save(newUser));
     }
 
     public UserResponse updateUser(Long id, UserRequest userRequest) {
         User updatedUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay tai khoan nguoi dung de cap nhat!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy tài khoản người dùng để cập nhật!"));
         updatedUser.setEmail(userRequest.getEmail());
         updatedUser.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         updatedUser.setFullName(userRequest.getFullName());
@@ -90,7 +117,7 @@ public class UserService implements UserDetailsService {
 
     public UserResponse deleteUser(Long id) {
         User userDeleted = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay user de xoa!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user để xóa!"));
         userRepository.deleteById(id);
         return mapToResponse(userDeleted);
     }
@@ -98,6 +125,15 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Khong tim thay user voi email: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy user với email: " + username));
+    }
+
+    private Role resolveRole(String roleName) {
+        return roleRepository.findByName(roleName)
+                .orElseGet(() -> roleRepository.save(Role.builder().name(roleName).build()));
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 }

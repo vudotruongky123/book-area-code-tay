@@ -31,3 +31,17 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local runtime ###
+*.log
+backend.err.log
+backend.log
+minio-docker/minio-data/
+
+### Local Codex/agent files ###
+.agents/
+.codex/
+skills-lock.json
+
+### Root npm lock without root package ###
+/package-lock.json

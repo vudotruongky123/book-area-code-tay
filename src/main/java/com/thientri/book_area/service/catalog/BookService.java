@@ -35,37 +35,41 @@ public class BookService {
         return list;
     }
 
-    // Chuyển đổi dữ liệu sách để trả ra giao diện
     private BookResponse mapToResponse(Book book) {
-        // Kiểm tên File và lấy đường dẫn File sách
-        String url = null;
-        if (book.getFileName() != null) {
-            try {
-                url = minioService.getUrl(book.getFileName());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+        String publisherName = book.getPublisher() == null ? null : book.getPublisher().getName();
 
         return BookResponse.builder()
                 .id(book.getId())
                 .title(book.getTitle())
-                .fileName(book.getFileName())
-                .bookUrl(url)
-                .pageNumber(book.getPageNumber())
+                .description(book.getDescription())
                 .price(book.getPrice())
                 .stock(book.getStock())
-                .publisherName(book.getPublisher().getName())
+                .publisherName(publisherName)
+                .pdfObjectName(book.getPdfObjectName())
+                .coverObjectName(book.getCoverObjectName())
+                .pdfUrl(getPresignedUrl(book.getPdfObjectName()))
+                .coverUrl(getPresignedUrl(book.getCoverObjectName()))
+                .createdAt(book.getCreatedAt())
                 .build();
     }
 
-    // Them sach moi
-    public BookResponse createBook(BookRequest bookRequest) {
-        // Tim nha xuat ban
-        Publisher publisher = publisherRepository.findById(bookRequest.getPublisherId())
-                .orElseThrow(() -> new RuntimeException("Khong tim thay nha xuat ban!"));
+    private String getPresignedUrl(String objectName) {
+        if (objectName == null || objectName.isBlank()) {
+            return null;
+        }
 
-        // Tao book moi va do du lieu tu BookRequest vao
+        try {
+            return minioService.getUrl(objectName);
+        } catch (Exception e) {
+            System.err.println("Không thể tạo presigned URL cho object " + objectName + ": " + e.getMessage());
+            return null;
+        }
+    }
+
+    public BookResponse createBook(BookRequest bookRequest) {
+        Publisher publisher = publisherRepository.findById(bookRequest.getPublisherId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản!"));
+
         Book newBook = new Book();
         newBook.setTitle(bookRequest.getTitle());
         newBook.setPageNumber(bookRequest.getPageNumber());
@@ -76,10 +80,10 @@ public class BookService {
 
         if (bookRequest.getFileBook() != null && !bookRequest.getFileBook().isEmpty()) {
             try {
-                String uploadedFileName = minioService.uploadFile(bookRequest.getFileBook());
-                newBook.setFileName(uploadedFileName);
+                String uploadedObjectName = minioService.uploadFile(bookRequest.getFileBook());
+                newBook.setPdfObjectName(uploadedObjectName);
             } catch (Exception e) {
-                throw new RuntimeException("Loi upload file: " + e.getMessage());
+                throw new RuntimeException("Lỗi upload file: " + e.getMessage());
             }
         }
 
@@ -87,49 +91,44 @@ public class BookService {
         return mapToResponse(savedBook);
     }
 
-    // Cap nhat sach, neu chua co thi them moi
     public BookResponse updateBook(Long id, BookRequest bookRequest) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay sach de cap nhat!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sách để cập nhật!"));
 
-        Publisher p = publisherRepository.findById(bookRequest.getPublisherId())
-                .orElseThrow(() -> new RuntimeException("Khong tim thay nha xuat ban de cap nhat sach!"));
+        Publisher publisher = publisherRepository.findById(bookRequest.getPublisherId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản để cập nhật sách!"));
 
         book.setTitle(bookRequest.getTitle());
         book.setPageNumber(bookRequest.getPageNumber());
         book.setDescription(bookRequest.getDescription());
         book.setPrice(bookRequest.getPrice());
         book.setStock(bookRequest.getStock());
-        book.setPublisher(p);
+        book.setPublisher(publisher);
 
-        // Sử lý cập nhật FILE nếu ADMIN tải lên FILE mới
         if (bookRequest.getFileBook() != null && !bookRequest.getFileBook().isEmpty()) {
             try {
-                // Xóa file cũ trên MinIO nếu có
-                if (book.getFileName() != null) {
-                    minioService.deleteFile(book.getFileName());
+                if (book.getPdfObjectName() != null) {
+                    minioService.deleteFile(book.getPdfObjectName());
                 }
-                // Đổi tên FILE sang tên FILE mới
-                String newFileName = minioService.uploadFile(bookRequest.getFileBook());
-                book.setFileName(newFileName);
+                String newObjectName = minioService.uploadFile(bookRequest.getFileBook());
+                book.setPdfObjectName(newObjectName);
             } catch (Exception e) {
-                throw new RuntimeException("Loi cap nhat File: " + e.getMessage());
+                throw new RuntimeException("Lỗi cập nhật file: " + e.getMessage());
             }
         }
 
         return mapToResponse(bookRepository.save(book));
     }
 
-    // Xoa sach theo ma
     public BookResponse deleteBook(Long id) {
         Book deletedBook = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay sach de xoa!"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sách để xóa!"));
 
-        if (deletedBook.getFileName() != null) {
+        if (deletedBook.getPdfObjectName() != null) {
             try {
-                minioService.deleteFile(deletedBook.getFileName());
+                minioService.deleteFile(deletedBook.getPdfObjectName());
             } catch (Exception e) {
-                System.err.println("Khong the xoa FILE tren MinIO: " + e.getMessage());
+                System.err.println("Không thể xóa file trên MinIO: " + e.getMessage());
             }
         }
 

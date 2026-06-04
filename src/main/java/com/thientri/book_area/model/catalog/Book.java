@@ -44,8 +44,11 @@ public class Book {
     @Column(name = "title", length = 255, nullable = false)
     private String title;
 
-    @Column(name = "file_name", length = 255, unique = true)
-    private String fileName;
+    @Column(name = "pdf_object_name", length = 500)
+    private String pdfObjectName;
+
+    @Column(name = "cover_object_name", length = 500)
+    private String coverObjectName;
 
     @Column(name = "page_number")
     private Integer pageNumber;

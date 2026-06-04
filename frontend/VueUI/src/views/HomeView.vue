@@ -2,6 +2,6 @@
   <Homepage />
 </template>
 
-<script setup lang="ts">
-import Homepage from '../Homepage.vue'
+<script setup>
+import Homepage from '../components/Homepage.vue'
 </script>

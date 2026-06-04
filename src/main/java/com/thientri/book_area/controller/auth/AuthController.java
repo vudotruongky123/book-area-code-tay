@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.thientri.book_area.dto.request.auth.LoginRequest;
+import com.thientri.book_area.dto.request.auth.RegisterRequest;
 import com.thientri.book_area.dto.request.auth.TokenRefreshRequest;
 import com.thientri.book_area.dto.response.auth.AuthResponse;
 import com.thientri.book_area.dto.response.user.UserResponse;
@@ -16,6 +17,8 @@ import com.thientri.book_area.model.user.RefreshToken;
 import com.thientri.book_area.security.JwtService;
 import com.thientri.book_area.service.auth.AuthService;
 import com.thientri.book_area.service.user.RefreshTokenService;
+
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,6 +32,14 @@ public class AuthController {
         this.authService = authService;
         this.refreshTokenService = refreshTokenService;
         this.jwtService = jwtService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest registerRequest) {
+        authService.register(registerRequest);
+        return ResponseEntity.status(201).body(java.util.Map.of(
+                "message",
+                "Đăng ký thành công, vui lòng đăng nhập."));
     }
 
     @PostMapping("/login")

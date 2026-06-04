@@ -51,12 +51,17 @@ public class SecurityConfig {
                                 "/favicon.ico")
                         .permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/users",
                                 "/api/auth/login",
+                                "/api/auth/register",
                                 "/api/auth/refresh")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/books").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/books",
+                                "/api/books/**",
+                                "/api/files/download")
+                        .permitAll()
                         .requestMatchers("/api/admin/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/audiobooks",
                                 "/api/audio-chapters",

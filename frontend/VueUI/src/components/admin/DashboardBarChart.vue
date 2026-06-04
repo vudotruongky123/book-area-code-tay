@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { computed } from 'vue'
 import { use } from 'echarts/core'
 import { BarChart } from 'echarts/charts'
@@ -6,34 +6,30 @@ import {
   GridComponent,
   LegendComponent,
   TooltipComponent,
-  type GridComponentOption,
-  type LegendComponentOption,
-  type TooltipComponentOption,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import VChart from 'vue-echarts'
-import type { ComposeOption } from 'echarts/core'
-import type { BarSeriesOption } from 'echarts/charts'
-
-import type { AdminMonthlyStats } from '../../types/dashboard'
 
 use([CanvasRenderer, BarChart, GridComponent, LegendComponent, TooltipComponent])
 
-type EChartsOption = ComposeOption<
-  BarSeriesOption | GridComponentOption | LegendComponentOption | TooltipComponentOption
->
+const props = defineProps({
+  stats: {
+    type: Array,
+    default: () => [],
+  },
+  loading: {
+    type: Boolean,
+    default: false,
+  },
+  error: {
+    type: String,
+    default: '',
+  },
+})
 
-const props = defineProps<{
-  stats: AdminMonthlyStats[]
-  loading?: boolean
-  error?: string
-}>()
+const emit = defineEmits(['retry'])
 
-const emit = defineEmits<{
-  retry: []
-}>()
-
-function formatMonth(month: string) {
+function formatMonth(month) {
   const [year, monthNumber] = month.split('-')
   const normalizedMonth = Number(monthNumber)
 
@@ -44,7 +40,7 @@ function formatMonth(month: string) {
   return `T${normalizedMonth}/${year}`
 }
 
-function formatCompactValue(value: number) {
+function formatCompactValue(value) {
   if (Math.abs(value) >= 1000) {
     return new Intl.NumberFormat('vi-VN', {
       notation: 'compact',
@@ -56,7 +52,7 @@ function formatCompactValue(value: number) {
   return value.toLocaleString('vi-VN')
 }
 
-const chartOption = computed<EChartsOption>(() => {
+const chartOption = computed(() => {
   const axisLabels = props.stats.map((item) => formatMonth(item.month))
 
   return {
@@ -119,7 +115,7 @@ const chartOption = computed<EChartsOption>(() => {
       splitNumber: 4,
       axisLabel: {
         color: '#7d6a5d',
-        formatter: (value: number) => formatCompactValue(value),
+        formatter: (value) => formatCompactValue(value),
       },
       splitLine: {
         lineStyle: {
