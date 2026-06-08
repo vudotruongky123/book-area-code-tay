@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { gsap } from 'gsap'
+import AppFooter from './layout/AppFooter.vue'
 import UserDropdown from './UserDropdown.vue'
 import { getBooks } from '../services/api'
 import { authUser } from '../stores/auth'
@@ -292,35 +293,7 @@ onUnmounted(() => {
       </section>
     </main>
 
-    <footer class="site-footer">
-      <div class="site-footer-main">
-        <div class="site-footer-brand">
-          <h2>BOOK AREA</h2>
-          <p>
-            Một góc thư viện số dành cho những cuốn sách yên tĩnh, những lần đọc chậm,
-            và những câu chuyện còn ở lại.
-          </p>
-        </div>
-
-        <nav class="site-footer-nav" aria-label="Khám phá">
-          <h3>Khám phá</h3>
-          <button type="button" @click="scrollToSection('home')">Trang chủ</button>
-          <button type="button" @click="goToLibrary">Thư viện</button>
-          <button type="button" @click="scrollToSection('latest-books')">Sách mới</button>
-          <RouterLink to="/login">Đăng nhập</RouterLink>
-        </nav>
-
-        <div class="site-footer-project">
-          <h3>Dự án</h3>
-          <p class="site-footer-stack">Spring Boot &middot; Vue &middot; SQL Server &middot; MinIO</p>
-          <p>
-            Lưu trữ PDF và ảnh bìa bằng MinIO, quản lý dữ liệu sách bằng SQL Server.
-          </p>
-        </div>
-      </div>
-
-      <p class="site-footer-bottom">&copy; 2026 Book Area. Dành cho những người đọc cần một khoảng lặng.</p>
-    </footer>
+    <AppFooter />
   </div>
 </template>
 
@@ -450,127 +423,6 @@ onUnmounted(() => {
 
   .hero-rail {
     display: none;
-  }
-}
-
-.site-footer {
-  width: min(100%, var(--content-width));
-  margin: clamp(3rem, 6vw, 5.5rem) auto 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in oklab, var(--line-soft) 86%, white);
-  border-radius: 8px;
-  background:
-    linear-gradient(135deg, oklch(0.965 0.014 78), oklch(0.885 0.03 70));
-  color: var(--text);
-  box-shadow: 0 5px 8px color-mix(in oklab, var(--accent-deep) 10%, transparent);
-}
-
-.site-footer-main {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(8rem, 0.55fr) minmax(0, 1fr);
-  gap: clamp(1.6rem, 4vw, 4rem);
-  padding: clamp(1.5rem, 4vw, 3rem);
-}
-
-.site-footer-brand,
-.site-footer-project,
-.site-footer-nav {
-  min-width: 0;
-}
-
-.site-footer h2,
-.site-footer h3,
-.site-footer p {
-  margin: 0;
-}
-
-.site-footer h2 {
-  color: var(--text-strong);
-  font-family: 'Raleway', 'Segoe UI', sans-serif;
-  font-size: clamp(1.65rem, 3vw, 3rem);
-  font-weight: 300;
-  line-height: 0.98;
-  letter-spacing: 0.18em;
-}
-
-.site-footer h3 {
-  margin-bottom: 0.85rem;
-  color: var(--text-strong);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.site-footer-brand p,
-.site-footer-project p {
-  max-width: 44rem;
-  margin-top: 1rem;
-  color: var(--text);
-  font-size: 0.98rem;
-  line-height: 1.72;
-}
-
-.site-footer-nav {
-  display: grid;
-  align-content: start;
-  gap: 0.5rem;
-}
-
-.site-footer-nav button,
-.site-footer-nav a {
-  width: max-content;
-  max-width: 100%;
-  color: var(--text-soft);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  transition:
-    color 180ms ease-out,
-    transform 180ms ease-out;
-}
-
-.site-footer-nav button:hover,
-.site-footer-nav a:hover {
-  color: var(--accent-deep);
-  transform: translateX(3px);
-}
-
-.site-footer-stack {
-  color: var(--text-strong);
-  font-weight: 700;
-}
-
-.site-footer-bottom {
-  padding: 1rem clamp(1.5rem, 4vw, 3rem);
-  border-top: 1px solid color-mix(in oklab, var(--line-soft) 72%, white);
-  background: color-mix(in oklab, var(--surface-soft) 62%, transparent);
-  color: var(--text-soft);
-  font-size: 0.9rem;
-}
-
-@media (max-width: 820px) {
-  .site-footer-main {
-    grid-template-columns: 1fr;
-  }
-
-  .site-footer-brand p,
-  .site-footer-project p {
-    max-width: 100%;
-  }
-}
-
-@media (max-width: 520px) {
-  .site-footer {
-    margin-top: 2.5rem;
-  }
-
-  .site-footer h2 {
-    font-size: clamp(1.35rem, 9vw, 2rem);
-    line-height: 1.08;
-  }
-
-  .site-footer-nav {
-    gap: 0.65rem;
   }
 }
 
