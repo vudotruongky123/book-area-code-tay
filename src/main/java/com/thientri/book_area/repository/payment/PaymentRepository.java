@@ -2,6 +2,7 @@ package com.thientri.book_area.repository.payment;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,8 @@ import com.thientri.book_area.repository.admin.MonthlyRevenueProjection;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
+
+    Optional<Payment> findByOrderId(Long orderId);
 
     @Query("""
             select coalesce(sum(p.amount), 0)

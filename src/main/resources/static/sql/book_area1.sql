@@ -14,6 +14,8 @@ GO
 USE book_area1;
 GO
 
+DROP DATABASE [book_area1];
+
 -- =========================
 -- 1. BẢNG PHÂN QUYỀN
 -- =========================
@@ -21,6 +23,7 @@ CREATE TABLE roles (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(50) NOT NULL UNIQUE
 );
+GO
 
 -- =========================
 -- 2. BẢNG USERS
@@ -34,6 +37,7 @@ CREATE TABLE users (
     created_at DATETIME2 DEFAULT SYSDATETIME(),
     status NVARCHAR(20) DEFAULT 'ACTIVE'
 );
+GO
 
 -- =========================
 -- 3. NHÀ XUẤT BẢN
@@ -44,6 +48,7 @@ CREATE TABLE publishers (
     description NVARCHAR(MAX),
     created_at DATETIME2 DEFAULT SYSDATETIME()
 );
+GO
 
 -- =========================
 -- 4. TÁC GIẢ
@@ -52,6 +57,7 @@ CREATE TABLE authors (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(255)
 );
+GO
 
 -- =========================
 -- 5. ĐỊA CHỈ USER
@@ -64,6 +70,7 @@ CREATE TABLE addresses (
     country NVARCHAR(100),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 6. USER - ROLE N-N
@@ -75,6 +82,7 @@ CREATE TABLE user_roles (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (role_id) REFERENCES roles(id)
 );
+GO
 
 -- =========================
 -- 7. SÁCH
@@ -91,6 +99,7 @@ CREATE TABLE books (
     cover_object_name NVARCHAR(500) NULL,
     FOREIGN KEY (publisher_id) REFERENCES publishers(id)
 );
+GO
 
 -- Thêm trường dữ liệu để có thể lưu file và đường dẫn sách
 
@@ -104,6 +113,7 @@ CREATE TABLE book_images (
     image_file_name NVARCHAR(MAX),
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
+GO
 
 -- Đổi tên cột để lấy ảnh trên MinIO
 
@@ -118,6 +128,7 @@ CREATE TABLE book_authors (
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES authors(id)
 );
+GO
 
 -- =========================
 -- 10. DANH MỤC
@@ -126,6 +137,7 @@ CREATE TABLE categories (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(255)
 );
+GO
 
 -- =========================
 -- 11. BOOK - CATEGORY N-N
@@ -137,6 +149,7 @@ CREATE TABLE book_categories (
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
+GO
 
 -- =========================
 -- 12. SÁCH NÓI
@@ -147,6 +160,7 @@ CREATE TABLE audiobooks (
     total_duration INT,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 13. CHƯƠNG SÁCH NÓI
@@ -159,6 +173,7 @@ CREATE TABLE audio_chapters (
     duration INT,
     FOREIGN KEY (audiobook_id) REFERENCES audiobooks(id) ON DELETE CASCADE
 );
+GO
 
 -- Đổi tên trường dữ liệu để lấy file âm thanh của MinIO
 
@@ -170,6 +185,7 @@ CREATE TABLE narrators (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(255)
 );
+GO
 
 -- =========================
 -- 15. AUDIOBOOK - NARRATOR N-N
@@ -181,6 +197,7 @@ CREATE TABLE audiobook_narrators (
     FOREIGN KEY (audiobook_id) REFERENCES audiobooks(id) ON DELETE CASCADE,
     FOREIGN KEY (narrator_id) REFERENCES narrators(id)
 );
+GO
 
 -- =========================
 -- 16. TIẾN ĐỘ NGHE
@@ -193,6 +210,7 @@ CREATE TABLE audio_progress (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (audiobook_id) REFERENCES audiobooks(id)
 );
+GO
 
 -- =========================
 -- 17. TRẠNG THÁI ĐƠN HÀNG
@@ -201,12 +219,14 @@ CREATE TABLE order_status (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     name NVARCHAR(50) NOT NULL UNIQUE
 );
+GO
 
 -- =========================
 -- 18. ĐƠN HÀNG
 -- =========================
 CREATE TABLE orders (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
+    order_code VARCHAR(50) UNIQUE NOT NULL,
     user_id BIGINT NOT NULL,
     address_id BIGINT NOT NULL,
     status_id BIGINT,
@@ -216,6 +236,7 @@ CREATE TABLE orders (
     FOREIGN KEY (address_id) REFERENCES addresses(id),
     FOREIGN KEY (status_id) REFERENCES order_status(id)
 );
+GO
 
 -- =========================
 -- 19. CHI TIẾT ĐƠN HÀNG
@@ -236,6 +257,7 @@ CREATE TABLE order_items (
         (book_id IS NULL AND audiobook_id IS NOT NULL)
     )
 );
+GO
 
 -- =========================
 -- 20. LỊCH SỬ TRẠNG THÁI ĐƠN HÀNG
@@ -247,6 +269,7 @@ CREATE TABLE order_status_history (
     changed_at DATETIME2 DEFAULT SYSDATETIME(),
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 21. PHƯƠNG THỨC THANH TOÁN
@@ -256,6 +279,7 @@ CREATE TABLE payment_methods (
     name NVARCHAR(50) UNIQUE,
     description NVARCHAR(MAX)
 );
+GO
 
 -- =========================
 -- 22. THANH TOÁN
@@ -270,6 +294,7 @@ CREATE TABLE payments (
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (payment_method_id) REFERENCES payment_methods(id)
 );
+GO
 
 -- =========================
 -- 23. GIỎ HÀNG
@@ -279,6 +304,7 @@ CREATE TABLE carts (
     user_id BIGINT UNIQUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 24. CHI TIẾT GIỎ HÀNG
@@ -291,6 +317,7 @@ CREATE TABLE cart_items (
     FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 25. ĐÁNH GIÁ
@@ -307,6 +334,7 @@ CREATE TABLE reviews (
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     CHECK (rating BETWEEN 1 AND 5)
 );
+GO
 
 -- =========================
 -- 26. DANH SÁCH YÊU THÍCH
@@ -316,6 +344,7 @@ CREATE TABLE wishlists (
     user_id BIGINT UNIQUE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 27. CHI TIẾT WISHLIST
@@ -327,6 +356,7 @@ CREATE TABLE wishlist_items (
     FOREIGN KEY (wishlist_id) REFERENCES wishlists(id) ON DELETE CASCADE,
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 28. MÃ GIẢM GIÁ
@@ -339,6 +369,7 @@ CREATE TABLE coupons (
     max_discount DECIMAL(10, 2),
     expiry_date DATETIME2
 );
+GO
 
 -- =========================
 -- 29. USER - COUPON N-N
@@ -351,6 +382,7 @@ CREATE TABLE user_coupons (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (coupon_id) REFERENCES coupons(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- 30. LỊCH SỬ KHO
@@ -363,6 +395,7 @@ CREATE TABLE inventory_logs (
     created_at DATETIME2 DEFAULT SYSDATETIME(),
     FOREIGN KEY (book_id) REFERENCES books(id)
 );
+GO
 
 
 -- Tạo bảng lưu Refresh Token (Có tác dụng lưu một chuỗi được tạo ra khi người dùng đăng nhập thành công, và có thời hạn sử dụng lâu hơn Access Token, thường là 7 ngày. Khi Access Token hết hạn, client có thể gửi Refresh Token này lên server để yêu cầu cấp mới Access Token mà không cần phải đăng nhập lại.)
@@ -376,6 +409,7 @@ CREATE TABLE refresh_tokens (
     refresh_token NVARCHAR(255) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+GO
 
 -- =========================
 -- INDEX
@@ -428,6 +462,7 @@ INSERT INTO roles (name) VALUES
 ('VIP'),
 ('MODERATOR'),
 ('SUPPORT');
+GO
 
 INSERT INTO users (email, password, full_name, phone) VALUES
 ('admin@bookarea.com', '123456', N'Nguyễn Quản Trị', '0901234567'),
@@ -440,6 +475,7 @@ INSERT INTO users (email, password, full_name, phone) VALUES
 ('user6@gmail.com', '123', N'User 6', '0900000006'),
 ('user7@gmail.com', '123', N'User 7', '0900000007'),
 ('user8@gmail.com', '123', N'User 8', '0900000008');
+GO
 
 INSERT INTO user_roles (user_id, role_id) VALUES
 (1, 1),
@@ -452,6 +488,7 @@ INSERT INTO user_roles (user_id, role_id) VALUES
 (8, 3),
 (9, 3),
 (10, 3);
+GO
 
 INSERT INTO addresses (user_id, address_line, city, country) VALUES
 (1, N'Address 1', N'HCM', N'VN'),
@@ -464,6 +501,7 @@ INSERT INTO addresses (user_id, address_line, city, country) VALUES
 (8, N'Address 8', N'HN', N'VN'),
 (9, N'Address 9', N'DN', N'VN'),
 (10, N'Address 10', N'CT', N'VN');
+GO
 
 INSERT INTO publishers (name, description) VALUES
 (N'NXB Trẻ', N'Nhà xuất bản dành cho giới trẻ'),
@@ -476,6 +514,7 @@ INSERT INTO publishers (name, description) VALUES
 (N'NXB Hội Nhà Văn', N'Tác phẩm văn học'),
 (N'NXB Thế Giới', N'Sách quốc tế'),
 (N'NXB Dân Trí', N'Sách phổ thông');
+GO
 
 INSERT INTO authors (name) VALUES
 (N'J.K. Rowling'),
@@ -488,6 +527,7 @@ INSERT INTO authors (name) VALUES
 (N'Rosie Nguyễn'),
 (N'Haruki Murakami'),
 (N'George Orwell');
+GO
 
 INSERT INTO categories (name) VALUES
 (N'Tiểu thuyết viễn tưởng'),
@@ -500,6 +540,7 @@ INSERT INTO categories (name) VALUES
 (N'Văn học nước ngoài'),
 (N'Phát triển bản thân'),
 (N'Sách nói');
+GO
 
 INSERT INTO books (title, description, price, stock, publisher_id, pdf_object_name, cover_object_name) VALUES
 (N'Harry Potter và Hòn đá Phù thủy', N'Tập 1 của series Harry Potter', 150000.00, 50, 1, NULL, NULL),
@@ -512,6 +553,7 @@ INSERT INTO books (title, description, price, stock, publisher_id, pdf_object_na
 (N'Đi Tìm Lẽ Sống', N'Câu chuyện về ý nghĩa cuộc đời', 130000.00, 45, 7, NULL, NULL),
 (N'Tuổi Trẻ Đáng Giá Bao Nhiêu', N'Sách truyền cảm hứng cho người trẻ', 100000.00, 90, 1, NULL, NULL),
 (N'Rừng Na Uy', N'Tiểu thuyết nổi tiếng của Haruki Murakami', 160000.00, 35, 8, NULL, NULL);
+GO
 
 INSERT INTO book_images (book_id, image_file_name) VALUES
 (1, N'img1'),
@@ -524,6 +566,7 @@ INSERT INTO book_images (book_id, image_file_name) VALUES
 (8, N'img8'),
 (9, N'img9'),
 (10, N'img10');
+GO
 
 INSERT INTO book_authors (book_id, author_id) VALUES
 (1, 1),
@@ -536,6 +579,7 @@ INSERT INTO book_authors (book_id, author_id) VALUES
 (8, 7),
 (9, 8),
 (10, 9);
+GO
 
 INSERT INTO book_categories (book_id, category_id) VALUES
 (1, 1),
@@ -548,6 +592,7 @@ INSERT INTO book_categories (book_id, category_id) VALUES
 (8, 5),
 (9, 9),
 (10, 8);
+GO
 
 INSERT INTO audiobooks (book_id, total_duration) VALUES
 (1, 300),
@@ -560,6 +605,7 @@ INSERT INTO audiobooks (book_id, total_duration) VALUES
 (8, 360),
 (9, 370),
 (10, 380);
+GO
 
 INSERT INTO audio_chapters (audiobook_id, title, audio_file_name, duration) VALUES
 (1, N'Chương 1', N'url1', 30),
@@ -572,6 +618,7 @@ INSERT INTO audio_chapters (audiobook_id, title, audio_file_name, duration) VALU
 (8, N'Chương 1', N'url8', 30),
 (9, N'Chương 1', N'url9', 30),
 (10, N'Chương 1', N'url10', 30);
+GO
 
 INSERT INTO narrators (name) VALUES
 (N'Người đọc 1'),
@@ -584,6 +631,7 @@ INSERT INTO narrators (name) VALUES
 (N'Người đọc 8'),
 (N'Người đọc 9'),
 (N'Người đọc 10');
+GO
 
 INSERT INTO audiobook_narrators (audiobook_id, narrator_id) VALUES
 (1, 1),
@@ -596,6 +644,7 @@ INSERT INTO audiobook_narrators (audiobook_id, narrator_id) VALUES
 (8, 8),
 (9, 9),
 (10, 10);
+GO
 
 INSERT INTO audio_progress (user_id, audiobook_id, progress) VALUES
 (1, 1, 10),
@@ -608,6 +657,7 @@ INSERT INTO audio_progress (user_id, audiobook_id, progress) VALUES
 (8, 8, 80),
 (9, 9, 90),
 (10, 10, 100);
+GO
 
 INSERT INTO order_status (name) VALUES
 ('PENDING'),
@@ -620,18 +670,20 @@ INSERT INTO order_status (name) VALUES
 ('RETURNED'),
 ('PROCESSING'),
 ('COMPLETED');
+GO
 
-INSERT INTO orders (user_id, address_id, status_id, total_amount) VALUES
-(1, 1, 1, 100000),
-(2, 2, 2, 120000),
-(3, 3, 3, 130000),
-(4, 4, 4, 140000),
-(5, 5, 5, 150000),
-(6, 6, 6, 160000),
-(7, 7, 7, 170000),
-(8, 8, 8, 180000),
-(9, 9, 9, 190000),
-(10, 10, 10, 200000);
+INSERT INTO orders (order_code, user_id, address_id, status_id, total_amount) VALUES
+('ORD001', 1, 1, 1, 100000),
+('ORD002', 2, 2, 2, 120000),
+('ORD003', 3, 3, 3, 130000),
+('ORD004', 4, 4, 4, 140000),
+('ORD005', 5, 5, 5, 150000),
+('ORD006', 6, 6, 6, 160000),
+('ORD007', 7, 7, 7, 170000),
+('ORD008', 8, 8, 8, 180000),
+('ORD009', 9, 9, 9, 190000),
+('ORD010', 10, 10, 10, 200000);
+GO
 
 INSERT INTO order_items (order_id, book_id, audiobook_id, quantity, price) VALUES
 (1, 1, NULL, 1, 100000),
@@ -644,6 +696,7 @@ INSERT INTO order_items (order_id, book_id, audiobook_id, quantity, price) VALUE
 (8, 8, NULL, 1, 180000),
 (9, 9, NULL, 1, 190000),
 (10, 10, NULL, 1, 200000);
+GO
 
 INSERT INTO order_status_history (order_id, status) VALUES
 (1, 'PENDING'),
@@ -656,9 +709,11 @@ INSERT INTO order_status_history (order_id, status) VALUES
 (8, 'RETURNED'),
 (9, 'PROCESSING'),
 (10, 'COMPLETED');
+GO
 
 INSERT INTO payment_methods (name, description) VALUES
 ('COD', N'Thanh toán khi nhận hàng'),
+('BANK_TRANSFER', N'Thanh toán trước khi nhận hàng'),
 ('BANK', N'Chuyển khoản ngân hàng'),
 ('MOMO', N'Ví MoMo'),
 ('ZALO', N'ZaloPay'),
@@ -666,8 +721,8 @@ INSERT INTO payment_methods (name, description) VALUES
 ('PAYPAL', N'PayPal'),
 ('CARD', N'Thẻ ngân hàng'),
 ('APPLEPAY', N'Apple Pay'),
-('GOOGLEPAY', N'Google Pay'),
-('CRYPTO', N'Tiền mã hóa');
+('GOOGLEPAY', N'Google Pay');
+GO
 
 INSERT INTO payments (order_id, payment_method_id, amount, status) VALUES
 (1, 1, 100000, 'PAID'),
@@ -680,6 +735,7 @@ INSERT INTO payments (order_id, payment_method_id, amount, status) VALUES
 (8, 8, 180000, 'PAID'),
 (9, 9, 190000, 'PAID'),
 (10, 10, 200000, 'PAID');
+GO
 
 INSERT INTO carts (user_id) VALUES
 (1),
@@ -692,6 +748,7 @@ INSERT INTO carts (user_id) VALUES
 (8),
 (9),
 (10);
+GO
 
 INSERT INTO cart_items (cart_id, book_id, quantity) VALUES
 (1, 1, 1),
@@ -704,6 +761,7 @@ INSERT INTO cart_items (cart_id, book_id, quantity) VALUES
 (8, 8, 1),
 (9, 9, 1),
 (10, 10, 1);
+GO
 
 INSERT INTO reviews (user_id, book_id, rating, comment) VALUES
 (1, 1, 5, N'Good'),
@@ -716,6 +774,7 @@ INSERT INTO reviews (user_id, book_id, rating, comment) VALUES
 (8, 8, 4, N'Nice'),
 (9, 9, 5, N'Good'),
 (10, 10, 4, N'Nice');
+GO
 
 INSERT INTO wishlists (user_id) VALUES
 (1),
@@ -728,6 +787,7 @@ INSERT INTO wishlists (user_id) VALUES
 (8),
 (9),
 (10);
+GO
 
 INSERT INTO wishlist_items (wishlist_id, book_id) VALUES
 (1, 1),
@@ -740,6 +800,7 @@ INSERT INTO wishlist_items (wishlist_id, book_id) VALUES
 (8, 8),
 (9, 9),
 (10, 10);
+GO
 
 INSERT INTO coupons (code, discount_type, discount_value, max_discount, expiry_date) VALUES
 ('C1', 'PERCENT', 10, 50000, DATEADD(DAY, 30, SYSDATETIME())),
@@ -752,6 +813,7 @@ INSERT INTO coupons (code, discount_type, discount_value, max_discount, expiry_d
 ('C8', 'PERCENT', 10, 50000, DATEADD(DAY, 30, SYSDATETIME())),
 ('C9', 'PERCENT', 10, 50000, DATEADD(DAY, 30, SYSDATETIME())),
 ('C10', 'PERCENT', 10, 50000, DATEADD(DAY, 30, SYSDATETIME()));
+GO
 
 INSERT INTO user_coupons (user_id, coupon_id, used) VALUES
 (1, 1, 1),
@@ -764,6 +826,7 @@ INSERT INTO user_coupons (user_id, coupon_id, used) VALUES
 (8, 8, 0),
 (9, 9, 1),
 (10, 10, 0);
+GO
 
 INSERT INTO inventory_logs (book_id, change_amount, reason) VALUES
 (1, 10, 'IMPORT'),
@@ -776,6 +839,7 @@ INSERT INTO inventory_logs (book_id, change_amount, reason) VALUES
 (8, 10, 'IMPORT'),
 (9, 10, 'IMPORT'),
 (10, 10, 'IMPORT');
+GO
 
 
 

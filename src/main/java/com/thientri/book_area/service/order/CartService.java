@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.thientri.book_area.dto.request.order.CartItemRequest;
 import com.thientri.book_area.dto.response.catalog.BookResponse;
 import com.thientri.book_area.dto.response.order.CartItemResponse;
+import com.thientri.book_area.exception.BadRequestException;
+import com.thientri.book_area.exception.ForbiddenException;
+import com.thientri.book_area.exception.ResourceNotFoundException;
 import com.thientri.book_area.model.catalog.Book;
 import com.thientri.book_area.model.order.Cart;
 import com.thientri.book_area.model.order.CartItem;
@@ -51,7 +54,7 @@ public class CartService {
     // Kiểm tra người dùng trước khi thao tác giỏ hàng
     private User checkUser(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy người dùng!"));
     }
 
     // Thêm sản phẩm vào giỏ hàng
@@ -68,7 +71,7 @@ public class CartService {
 
         // 3. Tìm cuốn sách mà khách muốn thêm
         Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Sách không tồn tại!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Sách không tồn tại!"));
 
         // 4. KIỂM TRA SÁCH ĐÃ CÓ TRONG GIỎ HAY CHƯA
         Optional<CartItem> existingItem = cart.getCartItems().stream()
@@ -78,7 +81,7 @@ public class CartService {
             if (cartItem.getQuantity() + request.getQuantity() <= book.getStock()) {
                 cartItem.setQuantity(cartItem.getQuantity() + request.getQuantity());
             } else {
-                throw new RuntimeException("Sách đã hết hàng, quý khách vui lòng chờ nhập kho!");
+                throw new BadRequestException("Sách đã hết hàng, quý khách vui lòng chờ nhập kho!");
             }
         } else {
             if (book.getStock() - request.getQuantity() >= 0) {
@@ -89,7 +92,7 @@ public class CartService {
                         .build();
                 cart.getCartItems().add(newCartItem);
             } else {
-                throw new RuntimeException("Sách đã hết hàng, quý khách vui lòng chờ nhập kho!");
+                throw new BadRequestException("Sách đã hết hàng, quý khách vui lòng chờ nhập kho!");
             }
         }
 
@@ -111,12 +114,12 @@ public class CartService {
         Cart cart = checkUser(email).getCart();
 
         CartItem deletedCartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay sach trong gio de xoa!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Khong tim thay sach trong gio de xoa!"));
 
         if (cart.getId().equals(deletedCartItem.getCart().getId())) {
             cartItemRepository.deleteById(cartItemId);
         } else {
-            throw new RuntimeException(
+            throw new ForbiddenException(
                     "Id gio hang cua sach trong gio hang khong trung voi Id gio hang cua nguoi dung!");
         }
         return mapToResponse(deletedCartItem);
@@ -127,7 +130,7 @@ public class CartService {
         Cart cart = checkUser(email).getCart();
 
         CartItem updatedCartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("Khong tim thay sach trong gio de cap nhat!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Khong tim thay sach trong gio de cap nhat!"));
 
         Book book = updatedCartItem.getBook();
 
@@ -135,12 +138,12 @@ public class CartService {
             if (newQuantity <= book.getStock() && newQuantity > 0) {
                 updatedCartItem.setQuantity(newQuantity);
             } else {
-                throw new RuntimeException(
+                throw new BadRequestException(
                         "Số lượng cập nhật không hợp lệ hoặc vượt quá tồn kho!");
             }
             return mapToResponse(cartItemRepository.save(updatedCartItem));
         } else {
-            throw new RuntimeException(
+            throw new ForbiddenException(
                     "Id gio hang cua sach trong gio hang khong trung voi Id gio hang cua nguoi dung!");
         }
     }
