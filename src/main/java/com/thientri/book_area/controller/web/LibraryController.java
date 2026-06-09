@@ -1,42 +1,50 @@
 package com.thientri.book_area.controller.web;
 
+import com.thientri.book_area.service.catalog.BookService;
+import com.thientri.book_area.service.catalog.CategoryService;
+
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.thientri.book_area.model.catalog.Book;
-import com.thientri.book_area.model.catalog.Category;
-import com.thientri.book_area.repository.catalog.BookRepository;
-import com.thientri.book_area.repository.catalog.CategoryRepository;
+import com.thientri.book_area.dto.request.catalog.BookSearchRequest;
+import com.thientri.book_area.dto.response.catalog.BookResponse;
+import com.thientri.book_area.dto.response.catalog.CategoryResponse;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/data")
+@RequestMapping("/api/public")
 @CrossOrigin("*")
+@RequiredArgsConstructor
 public class LibraryController {
-    @Autowired
-    BookRepository bookRepository;
-    @Autowired
-    CategoryRepository categoryRepository;
-    @Autowired
-    
+    private final BookService bookService;
+    private final CategoryService categoryService;
 
-    @GetMapping("/book")
-    public List<Book> allBook() {
-        return bookRepository.findAllFull();
+    @GetMapping("/books")
+    public List<BookResponse> getAllBooks() {
+        return bookService.getAllBooks();
     }
 
-    @GetMapping("/category")
-    public List<Category> allCategory() {
-        return categoryRepository.findAll();
+    @GetMapping("/books/search")
+    public Page<BookResponse> bookFilter(@ModelAttribute BookSearchRequest searchRequest, Pageable pageable) {
+        return bookService.searchBooks(searchRequest, pageable);
     }
-    
-    @GetMapping("/bookdetails/{id}")
-    public Book bookdetail(@PathVariable long id) {
-        return bookRepository.findByIdBook(id).get();
+
+    @GetMapping("/books/{id}")
+    public BookResponse getBookById(@PathVariable Long id) {
+        return bookService.getBookById(id);
+    }
+
+    @GetMapping("/categories")
+    public List<CategoryResponse> getAllCategories() {
+        return categoryService.getAllCategories();
     }
 }

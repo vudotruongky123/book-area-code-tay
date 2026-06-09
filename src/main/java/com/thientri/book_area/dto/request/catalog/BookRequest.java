@@ -18,6 +18,7 @@ import lombok.Setter;
 public class BookRequest {
     private String title;
     private MultipartFile fileBook;
+    private MultipartFile coverImage; // Bổ sung thêm file ảnh BBìa
     private Integer pageNumber;
     private String description;
     private BigDecimal price;

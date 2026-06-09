@@ -3,29 +3,32 @@ package com.thientri.book_area.service.catalog;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.thientri.book_area.exception.BadRequestException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.thientri.book_area.dto.request.catalog.BookRequest;
+import com.thientri.book_area.dto.request.catalog.BookSearchRequest;
 import com.thientri.book_area.dto.response.catalog.BookResponse;
+import com.thientri.book_area.exception.ResourceNotFoundException;
 import com.thientri.book_area.model.catalog.Book;
 import com.thientri.book_area.model.catalog.Publisher;
 import com.thientri.book_area.repository.catalog.BookRepository;
+import com.thientri.book_area.repository.catalog.BookSpecification;
 import com.thientri.book_area.repository.catalog.PublisherRepository;
 import com.thientri.book_area.service.minio.MinioService;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class BookService {
 
     private final BookRepository bookRepository;
     private final PublisherRepository publisherRepository;
     private final MinioService minioService;
-
-    public BookService(BookRepository bookRepository, PublisherRepository publisherRepository,
-            MinioService minioService) {
-        this.bookRepository = bookRepository;
-        this.publisherRepository = publisherRepository;
-        this.minioService = minioService;
-    }
 
     public List<BookResponse> getAllBooks() {
         List<BookResponse> list = new ArrayList<>();
@@ -33,6 +36,12 @@ public class BookService {
             list.add(mapToResponse(book));
         }
         return list;
+    }
+
+    public BookResponse getBookById(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Khong tim thay sach co ID: " + id));
+        return mapToResponse(book);
     }
 
     private BookResponse mapToResponse(Book book) {
@@ -66,9 +75,11 @@ public class BookService {
         }
     }
 
+    // ... (Giữ nguyên các hàm cũ ở trên)
+
     public BookResponse createBook(BookRequest bookRequest) {
         Publisher publisher = publisherRepository.findById(bookRequest.getPublisherId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà xuất bản!")); // Sửa Exception
 
         Book newBook = new Book();
         newBook.setTitle(bookRequest.getTitle());
@@ -78,25 +89,32 @@ public class BookService {
         newBook.setStock(bookRequest.getStock());
         newBook.setPublisher(publisher);
 
-        if (bookRequest.getFileBook() != null && !bookRequest.getFileBook().isEmpty()) {
-            try {
-                String uploadedObjectName = minioService.uploadFile(bookRequest.getFileBook());
-                newBook.setPdfObjectName(uploadedObjectName);
-            } catch (Exception e) {
-                throw new RuntimeException("Lỗi upload file: " + e.getMessage());
+        try {
+            // Upload PDF (Nếu có)
+            if (bookRequest.getFileBook() != null && !bookRequest.getFileBook().isEmpty()) {
+                String pdfObjectName = minioService.uploadFile(bookRequest.getFileBook());
+                newBook.setPdfObjectName(pdfObjectName);
             }
+
+            // Upload Ảnh bìa (Nếu có)
+            if (bookRequest.getCoverImage() != null && !bookRequest.getCoverImage().isEmpty()) {
+                String coverObjectName = minioService.uploadFile(bookRequest.getCoverImage());
+                newBook.setCoverObjectName(coverObjectName);
+            }
+        } catch (Exception e) {
+            throw new BadRequestException("Lỗi upload file lên hệ thống: " + e.getMessage()); // Sửa Exception
         }
 
-        Book savedBook = bookRepository.save(newBook);
-        return mapToResponse(savedBook);
+        return mapToResponse(bookRepository.save(newBook));
     }
 
     public BookResponse updateBook(Long id, BookRequest bookRequest) {
         Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sách để cập nhật!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách để cập nhật!")); // Sửa Exception
 
         Publisher publisher = publisherRepository.findById(bookRequest.getPublisherId())
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà xuất bản để cập nhật sách!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà xuất bản để cập nhật sách!")); // Sửa
+                                                                                                                    // Exception
 
         book.setTitle(bookRequest.getTitle());
         book.setPageNumber(bookRequest.getPageNumber());
@@ -105,16 +123,24 @@ public class BookService {
         book.setStock(bookRequest.getStock());
         book.setPublisher(publisher);
 
-        if (bookRequest.getFileBook() != null && !bookRequest.getFileBook().isEmpty()) {
-            try {
+        try {
+            // Cập nhật PDF
+            if (bookRequest.getFileBook() != null && !bookRequest.getFileBook().isEmpty()) {
                 if (book.getPdfObjectName() != null) {
                     minioService.deleteFile(book.getPdfObjectName());
                 }
-                String newObjectName = minioService.uploadFile(bookRequest.getFileBook());
-                book.setPdfObjectName(newObjectName);
-            } catch (Exception e) {
-                throw new RuntimeException("Lỗi cập nhật file: " + e.getMessage());
+                book.setPdfObjectName(minioService.uploadFile(bookRequest.getFileBook()));
             }
+
+            // Cập nhật Ảnh bìa
+            if (bookRequest.getCoverImage() != null && !bookRequest.getCoverImage().isEmpty()) {
+                if (book.getCoverObjectName() != null) {
+                    minioService.deleteFile(book.getCoverObjectName());
+                }
+                book.setCoverObjectName(minioService.uploadFile(bookRequest.getCoverImage()));
+            }
+        } catch (Exception e) {
+            throw new BadRequestException("Lỗi cập nhật file: " + e.getMessage()); // Sửa Exception
         }
 
         return mapToResponse(bookRepository.save(book));
@@ -122,17 +148,34 @@ public class BookService {
 
     public BookResponse deleteBook(Long id) {
         Book deletedBook = bookRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sách để xóa!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy sách để xóa!")); // Sửa Exception
 
-        if (deletedBook.getPdfObjectName() != null) {
-            try {
+        try {
+            // Xóa file PDF
+            if (deletedBook.getPdfObjectName() != null) {
                 minioService.deleteFile(deletedBook.getPdfObjectName());
-            } catch (Exception e) {
-                System.err.println("Không thể xóa file trên MinIO: " + e.getMessage());
             }
+            // Xóa file Ảnh bìa
+            if (deletedBook.getCoverObjectName() != null) {
+                minioService.deleteFile(deletedBook.getCoverObjectName());
+            }
+        } catch (Exception e) {
+            System.err.println("Không thể xóa file trên MinIO: " + e.getMessage());
         }
 
         bookRepository.deleteById(id);
         return mapToResponse(deletedBook);
+    }
+
+    // Tìm kiếm sách đa điều kiện
+    public Page<BookResponse> searchBooks(BookSearchRequest searchRequest, Pageable pageable) {
+        // Tạo bộ lọc
+        Specification<Book> spec = BookSpecification.filterBooks(searchRequest);
+
+        // Gọi Repository chạy truy vấn
+        Page<Book> bookPage = bookRepository.findAll(spec, pageable);
+
+        // Chuyển thành DTO (Page của Spring tự động hỗ trợ map())
+        return bookPage.map(this::mapToResponse);
     }
 }

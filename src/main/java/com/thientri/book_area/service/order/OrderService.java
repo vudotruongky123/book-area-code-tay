@@ -167,7 +167,7 @@ public class OrderService {
         // Phương thức hỗ trợ sinh link VietQR cho chuyển khoản ngân hàng
         private String generateVietQRLink(BigDecimal amount, String orderCode) {
                 String bankId = "VCB"; // Mã ngân hàng (Vietctinbank, VCB, MB, ACB,...)
-                String accountNo = "44384039741";
+                String accountNo = "4384039741";
                 String accountName = "Công ty TNHH Book Area";
 
                 return String.format(
